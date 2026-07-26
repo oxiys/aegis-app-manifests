@@ -9,7 +9,6 @@ CORS(app)
 
 DB_URL = os.environ.get('DATABASE_URL', 'postgresql://aegis:aegis@db:5432/aegis') # trufflehog:ignore
 
-
 def get_db():
     return psycopg2.connect(DB_URL)
 
