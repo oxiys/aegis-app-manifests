@@ -7,7 +7,7 @@ import psycopg2.extras
 app = Flask(__name__)
 CORS(app)
 
-DB_URL = os.environ.get('DATABASE_URL', 'postgresql://aegis:aegis@db:5432/aegis') #trufflehog:ignore
+DB_URL = os.environ.get('DATABASE_URL', 'postgresql://aegis:aegis@db:5432/aegis') # trufflehog:ignore
 
 def get_db():
     return psycopg2.connect(DB_URL)
