@@ -20,9 +20,9 @@ metadata:
   namespace: aegis
 type: Opaque
 stringData:
-  POSTGRES_USER: aegis
-  POSTGRES_PASSWORD: aegis
-  POSTGRES_DB: aegis
+  POSTGRES_USER: aegis #trufflehog:ignore
+  POSTGRES_PASSWORD: aegis #trufflehog:ignore
+  POSTGRES_DB: aegis #trufflehog:ignore
   DATABASE_URL: "postgresql://aegis:aegis@postgres:5432/aegis" #trufflehog:ignore
 
 ---
