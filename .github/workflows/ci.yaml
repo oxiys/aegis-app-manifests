@@ -19,18 +19,11 @@ jobs:
     strategy:
       matrix:
         service:
-          # Example: Single application
-          - name: application
-            path: .
+          - name: frontend
+            path: ./frontend
 
-          #
-          # Example: Multi-component application
-          #
-          # - name: frontend
-          #   path: ./frontend
-          #
-          # - name: backend
-          #   path: ./backend
+          - name: backend
+            path: ./backend
 
     steps:
       ############################################################
