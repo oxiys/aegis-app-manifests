@@ -2,7 +2,17 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: aegis
+
 ---
+# ServiceAccount dedicato al backend
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-sa
+  namespace: aegis
+
+---
+# Secret database (demo)
 apiVersion: v1
 kind: Secret
 metadata:
@@ -14,7 +24,33 @@ stringData:
   POSTGRES_PASSWORD: aegis
   POSTGRES_DB: aegis
   DATABASE_URL: "postgresql://aegis:aegis@postgres:5432/aegis"
+
 ---
+# ConfigMap applicativa
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: aegis
+data:
+  BACKEND_URL: "http://backend:5000"
+
+---
+# Persistent Volume Claim database
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: aegis
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+# Database Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,117 +61,260 @@ spec:
   selector:
     matchLabels:
       app: postgres
+
   template:
     metadata:
       labels:
         app: postgres
+
     spec:
+      securityContext:
+        fsGroup: 999
+
       containers:
         - name: postgres
           image: postgres:16-alpine
+
           ports:
             - containerPort: 5432
+
           envFrom:
             - secretRef:
                 name: postgres-secret
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
+
       volumes:
         - name: pgdata
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+
 ---
+# Database Service
 apiVersion: v1
 kind: Service
 metadata:
   name: postgres
   namespace: aegis
+
 spec:
   selector:
     app: postgres
+
   ports:
     - port: 5432
+      targetPort: 5432
+
+
 ---
+# Backend Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
   namespace: aegis
+
 spec:
   replicas: 2
+
   selector:
     matchLabels:
       app: backend
+
   template:
+
     metadata:
       labels:
         app: backend
+
     spec:
+
+      serviceAccountName: backend-sa
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+
       containers:
+
         - name: backend
-          image: ghcr.io/OWNER/aegis-backend:latest
+
+          image: <DOCKERHUB_USERNAME>/aegis-backend:latest
+
           ports:
             - containerPort: 5000
+
+
           env:
+
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: DATABASE_URL
+
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+
+          securityContext:
+
+            allowPrivilegeEscalation: false
+
+
           livenessProbe:
+
             httpGet:
               path: /api/health
               port: 5000
-            initialDelaySeconds: 5
-            periodSeconds: 10
+
+            initialDelaySeconds: 10
+            periodSeconds: 15
+
+
           readinessProbe:
+
             httpGet:
               path: /api/ready
               port: 5000
+
             initialDelaySeconds: 5
             periodSeconds: 10
+
+
 ---
+# Backend Service
 apiVersion: v1
 kind: Service
+
 metadata:
   name: backend
   namespace: aegis
+
 spec:
+
   selector:
     app: backend
+
   ports:
+
     - port: 5000
+      targetPort: 5000
+
+
 ---
+# Frontend Deployment
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: frontend
   namespace: aegis
+
+
 spec:
+
   replicas: 2
+
   selector:
+
     matchLabels:
       app: frontend
+
+
   template:
+
     metadata:
+
       labels:
         app: frontend
+
+
     spec:
+
       containers:
+
         - name: frontend
-          image: ghcr.io/OWNER/aegis-frontend:latest
+
+          image: <DOCKERHUB_USERNAME>/aegis-frontend:latest
+
+
           ports:
+
             - containerPort: 80
+
+
+          env:
+
+            - name: BACKEND_URL
+
+              valueFrom:
+
+                configMapKeyRef:
+
+                  name: app-config
+
+                  key: BACKEND_URL
+
+
+          resources:
+
+            requests:
+
+              cpu: "50m"
+              memory: "64Mi"
+
+
+            limits:
+
+              cpu: "200m"
+              memory: "256Mi"
+
+
+          securityContext:
+
+            allowPrivilegeEscalation: false
+
+
 ---
+# Frontend Service
 apiVersion: v1
 kind: Service
+
 metadata:
+
   name: frontend
   namespace: aegis
+
+
 spec:
+
   type: NodePort
+
+
   selector:
+
     app: frontend
+
+
   ports:
+
     - port: 80
       targetPort: 80
