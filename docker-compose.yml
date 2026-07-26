@@ -1,30 +1,30 @@
 services:
-	db:
-		image: postgres:16-alpine
-		environment:
-			POSTGRES_USER: aegis
-			POSTGRES_PASSWORD: aegis
-			POSTGRES_DB: aegis
-		ports:
-			- "5432:5432"
-		volumes:
-			- pgdata:/var/lib/postgresql/data
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: aegis
+      POSTGRES_PASSWORD: aegis
+      POSTGRES_DB: aegis
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
-	backend:
-		build: ./backend
-		environment:
-			DATABASE_URL: postgresql://aegis:aegis@db:5432/aegis # trufflehog:ignore
-		ports:
-			- "5000:5000"
-		depends_on:
-			- db
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://aegis:aegis@db:5432/aegis # trufflehog:ignore
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
 
-	frontend:
-		build: ./frontend
-		ports:
-			- "3000:80"
-		depends_on:
-			- backend
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
 
 volumes:
-	pgdata:
+  pgdata:
