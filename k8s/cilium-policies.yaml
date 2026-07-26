@@ -1,0 +1,99 @@
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: frontend-policy
+  namespace: aegis
+spec:
+  endpointSelector:
+    matchLabels:
+      app: frontend
+  ingress:
+    # Allow inbound traffic from the outside world (e.g. users, Ingress controllers)
+    - fromEntities:
+        - world
+        - cluster
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+  egress:
+    # Allow outbound traffic to backend on port 5000
+    - toEndpoints:
+        - matchLabels:
+            app: backend
+      toPorts:
+        - ports:
+            - port: "5000"
+              protocol: TCP
+    # Allow outbound traffic to DNS (required to resolve 'backend' hostname)
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: backend-policy
+  namespace: aegis
+spec:
+  endpointSelector:
+    matchLabels:
+      app: backend
+  ingress:
+    # Allow inbound traffic ONLY from frontend on port 5000
+    - fromEndpoints:
+        - matchLabels:
+            app: frontend
+      toPorts:
+        - ports:
+            - port: "5000"
+              protocol: TCP
+  egress:
+    # Allow outbound traffic to postgres on port 5432
+    - toEndpoints:
+        - matchLabels:
+            app: postgres
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    # Allow outbound traffic to DNS (required to resolve 'postgres' hostname)
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s:k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: ANY
+
+---
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: postgres-policy
+  namespace: aegis
+spec:
+  endpointSelector:
+    matchLabels:
+      app: postgres
+  ingress:
+    # Allow inbound traffic ONLY from backend on port 5432
+    - fromEndpoints:
+        - matchLabels:
+            app: backend
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+  egress:
+    # Postgres doesn't need to initiate any outbound connections.
+    # By omitting egress rules entirely, it will default-deny any outbound traffic.
+    []
