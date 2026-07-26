@@ -25,6 +25,8 @@ spec:
 
 
     spec:
+      serviceAccountName: frontend-sa
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
