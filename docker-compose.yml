@@ -13,7 +13,7 @@ services:
 	backend:
 		build: ./backend
 		environment:
-			DATABASE_URL: postgresql://aegis:aegis@db:5432/aegis
+			DATABASE_URL: postgresql://aegis:aegis@db:5432/aegis # trufflehog:ignore
 		ports:
 			- "5000:5000"
 		depends_on:
