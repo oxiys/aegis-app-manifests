@@ -69,6 +69,8 @@ spec:
 
     spec:
       securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
         fsGroup: 999
 
       containers:
@@ -90,14 +92,26 @@ spec:
               cpu: "500m"
               memory: "512Mi"
 
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+
           volumeMounts:
             - name: pgdata
               mountPath: /var/lib/postgresql/data
+            - name: tmp
+              mountPath: /tmp
+            - name: run
+              mountPath: /var/run/postgresql
 
       volumes:
         - name: pgdata
           persistentVolumeClaim:
             claimName: postgres-pvc
+        - name: tmp
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
 
 ---
 # Database Service
@@ -175,8 +189,8 @@ spec:
 
 
           securityContext:
-
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
 
 
           livenessProbe:
@@ -248,6 +262,9 @@ spec:
 
 
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
 
       containers:
 
@@ -289,8 +306,8 @@ spec:
 
 
           securityContext:
-
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
 
 
 ---
