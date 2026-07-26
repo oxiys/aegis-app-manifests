@@ -36,6 +36,7 @@ metadata:
   name: deny-automount-token
   annotations:
     argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   match:
     kinds:
@@ -80,6 +81,9 @@ apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sRequireReadOnlyRootFS
 metadata:
   name: require-ro-rootfs
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   match:
     kinds:
