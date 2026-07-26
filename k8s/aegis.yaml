@@ -84,6 +84,10 @@ spec:
             - secretRef:
                 name: postgres-secret
 
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+
           resources:
             requests:
               cpu: "100m"
@@ -163,7 +167,7 @@ spec:
 
         - name: backend
 
-          image: <DOCKERHUB_USERNAME>/aegis-backend:latest
+          image: gcrbr/backend:latest
 
           ports:
             - containerPort: 5000
@@ -270,7 +274,7 @@ spec:
 
         - name: frontend
 
-          image: <DOCKERHUB_USERNAME>/aegis-frontend:latest
+          image: gcrbr/frontend:latest
 
 
           ports:
