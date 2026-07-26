@@ -6,6 +6,8 @@ apiVersion: templates.gatekeeper.sh/v1
 kind: ConstraintTemplate
 metadata:
   name: k8snoautomountserviceaccounttoken
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   crd:
     spec:
@@ -32,6 +34,8 @@ apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sNoAutomountServiceAccountToken
 metadata:
   name: deny-automount-token
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   match:
     kinds:
