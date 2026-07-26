@@ -1,0 +1,85 @@
+---
+# ---------------------------------------------------------
+# CONSTRAINT TEMPLATE: No Automount Service Account Token
+# ---------------------------------------------------------
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8snoautomountserviceaccounttoken
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sNoAutomountServiceAccountToken
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8snoautomountserviceaccounttoken
+
+        violation[{"msg": msg}] {
+          # Check if the resource is a Deployment, DaemonSet, StatefulSet or Job
+          spec := input.review.object.spec.template.spec
+          # If automountServiceAccountToken is missing or true, it's a violation
+          not spec.automountServiceAccountToken == false
+          msg := "Security Violation: automountServiceAccountToken MUST be set to false for all Pods to prevent privilege escalation."
+        }
+
+---
+# ---------------------------------------------------------
+# CONSTRAINT: Enforce No Automount Token in 'aegis' namespace
+# ---------------------------------------------------------
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sNoAutomountServiceAccountToken
+metadata:
+  name: deny-automount-token
+spec:
+  match:
+    kinds:
+      - apiGroups: ["apps"]
+        kinds: ["Deployment"]
+    namespaces:
+      - "aegis"
+
+---
+# ---------------------------------------------------------
+# CONSTRAINT TEMPLATE: Require ReadOnlyRootFilesystem
+# ---------------------------------------------------------
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: k8srequirereadonlyrootfs
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sRequireReadOnlyRootFS
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequirereadonlyrootfs
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.template.spec.containers[_]
+          not has_readonly_root_fs(container)
+          msg := sprintf("Security Violation: Container '%v' must have securityContext.readOnlyRootFilesystem set to true.", [container.name])
+        }
+
+        has_readonly_root_fs(c) {
+          c.securityContext.readOnlyRootFilesystem == true
+        }
+
+---
+# ---------------------------------------------------------
+# CONSTRAINT: Enforce ReadOnlyRootFilesystem in 'aegis' namespace
+# ---------------------------------------------------------
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sRequireReadOnlyRootFS
+metadata:
+  name: require-ro-rootfs
+spec:
+  match:
+    kinds:
+      - apiGroups: ["apps"]
+        kinds: ["Deployment"]
+    namespaces:
+      - "aegis"
