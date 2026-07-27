@@ -91,8 +91,8 @@ def delete_todo(todo_id):
 with app.app_context():
     try:
         init_db()
-    except Exception:
-        pass
+    except Exception as e:
+        print(f'Could not initialize database: {e}')
 
 if __name__ == '__main__':
     init_db()
