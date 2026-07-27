@@ -29,6 +29,8 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: DATABASE_URL
+            - name: GUNICORN_CMD_ARGS
+              value: "--worker-tmp-dir /tmp"
           resources:
             requests:
               cpu: "100m"
