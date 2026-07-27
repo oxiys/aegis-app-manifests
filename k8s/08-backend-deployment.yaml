@@ -31,6 +31,8 @@ spec:
                   key: DATABASE_URL
             - name: GUNICORN_CMD_ARGS
               value: "--worker-tmp-dir /tmp"
+            - name: HOME
+              value: /tmp # spostiamo la cartella principale a tmp, dove ha i permessi
           resources:
             requests:
               cpu: "100m"
