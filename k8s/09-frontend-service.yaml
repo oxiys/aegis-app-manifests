@@ -1,23 +1,18 @@
+# ==============================================================================
+# Frontend External Service
+# Exposes the frontend application outside the cluster via NodePort,
+# routing incoming HTTP traffic to pods matching the 'app: frontend' label.
+# ==============================================================================
+
 apiVersion: v1
 kind: Service
-
 metadata:
-
   name: frontend
   namespace: aegis
-
-
 spec:
-
-  type: NodePort
-
-
+  type: NodePort # Exposes the service for external access
   selector:
-
     app: frontend
-
-
   ports:
-
     - port: 80
       targetPort: 80

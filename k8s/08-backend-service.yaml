@@ -1,16 +1,17 @@
+# ==============================================================================
+# Backedn Internal Service
+# Creates a stable internal network endpoint and DNS name ('backend') 
+# to route traffic inside the cluster to backend pods.
+# ==============================================================================
+
 apiVersion: v1
 kind: Service
-
 metadata:
   name: backend
   namespace: aegis
-
 spec:
-
   selector:
-    app: backend
-
+    app: backend # Routes traffic to any Pod carrying the matching 'app: backend' label
   ports:
-
-    - port: 5000
-      targetPort: 5000
+    - port: 5000 # The stable port exposed by the service inside the cluster network. The internal clients address to this port.
+      targetPort: 5000 # The actual port where the backend container application is listening.

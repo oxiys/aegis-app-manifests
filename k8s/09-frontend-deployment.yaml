@@ -1,75 +1,57 @@
+# ===============================================================================
+# Frontend Application Deployment
+# Manages the frontend pod lifecycle (Nginx/Web UI), enforcing security contexts,
+# injecting backend URL from ConfigMap, and mounting writable temp directories
+# to support a read-only root filesystem.
+# ===============================================================================
+
 apiVersion: apps/v1
 kind: Deployment
-
 metadata:
   name: frontend
   namespace: aegis
   annotations:
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "2"  # ArgoCD hook: deploys frontend last (wave 2) after DB and backend
 
 spec:
-
-  replicas: 1
-  revisionHistoryLimit: 2
+  replicas: 1 # Runs a single frontend pod instance
+  revisionHistoryLimit: 2  # Retains only 2 old ReplicaSets for rollback history
   selector:
-
     matchLabels:
       app: frontend
 
-
   template:
-
     metadata:
-
       labels:
         app: frontend
 
-
     spec:
-      serviceAccountName: frontend-sa
+      serviceAccountName: frontend-sa # Attaches the frontend ServiceAccount
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        runAsUser: 101
+        runAsUser: 101 # Runs container process as UID 101 (unprivileged user)
 
       containers:
-
         - name: frontend
-
-          image: gcrbr/frontend:323e3628953497952fbcb3ecd058f6a3e1222fad
-
-
+          image: gcrbr/frontend:323e3628953497952fbcb3ecd058f6a3e1222fad # Application image tagged with Git commit SHA
           ports:
-
             - containerPort: 80
 
-
           env:
-
             - name: BACKEND_URL
-
               valueFrom:
-
                 configMapKeyRef:
-
-                  name: app-config
-
+                  name: app-config  # Loads backend endpoint URL from ConfigMap
                   key: BACKEND_URL
 
-
           resources:
-
             requests:
-
               cpu: "50m"
               memory: "64Mi"
-
-
             limits:
-
               cpu: "200m"
               memory: "256Mi"
-
 
           securityContext:
             allowPrivilegeEscalation: false
@@ -77,16 +59,17 @@ spec:
 
           volumeMounts:
             - name: tmp
-              mountPath: /tmp
+              mountPath: /tmp # Mount point for temp files
             - name: cache
-              mountPath: /var/cache/nginx
+              mountPath: /var/cache/nginx # Writable mount for Nginx runtime cache files
             - name: run
-              mountPath: /var/run
+              mountPath: /var/run  # Writable mount for Nginx PID and runtime socket files
 
       volumes:
         - name: tmp
-          emptyDir: {}
+          emptyDir: {} # Ephemeral volume mounted at /tmp
         - name: cache
-          emptyDir: {}
+          emptyDir: {} # Ephemeral volume mounted for Nginx cache
         - name: run
-          emptyDir: {}
+          emptyDir: {} # Ephemeral volume mounted for Nginx PID/runtime data
+

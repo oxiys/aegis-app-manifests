@@ -1,3 +1,7 @@
+# ====================================================================================================
+# A configuration map file to store non-sensitive application configurations and environment variables
+# ====================================================================================================
+
 apiVersion: v1
 kind: ConfigMap
 metadata:

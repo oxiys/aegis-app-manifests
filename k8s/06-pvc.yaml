@@ -1,3 +1,9 @@
+# ===============================================================
+# Persistent Volume Claim (PVC): Used to claim persistent storage 
+# within the cluster and the 'development' namespace,
+# abstracting the underlying infrastructure from the application
+# ===============================================================
+
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

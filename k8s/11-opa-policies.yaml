@@ -1,7 +1,14 @@
----
-# ---------------------------------------------------------
-# CONSTRAINT TEMPLATE: No Automount Service Account Token
-# ---------------------------------------------------------
+# ====================================================================================================
+# CONSTRAINT TEMPLATE defines a Gatekeeper template to detect and block privileged container execution
+# CONSTRAINT instantiates the privileged container rule and applies it to specific cluster resources
+#
+# This act as a binding. While the ConstraintTemplate defines the rule logic, 
+# the Constraint activates it by targeting Pods specifically in the development namespace.
+# ====================================================================================================
+
+# ------------------------------------------------------------------------------
+# 1. CONSTRAINT TEMPLATE: No Automount Service Account Token
+# ------------------------------------------------------------------------------
 apiVersion: templates.gatekeeper.sh/v1
 kind: ConstraintTemplate
 metadata:
@@ -27,9 +34,9 @@ spec:
         }
 
 ---
-# ---------------------------------------------------------
-# CONSTRAINT: Enforce No Automount Token in 'aegis' namespace
-# ---------------------------------------------------------
+# ------------------------------------------------------------------------------
+# 2. CONSTRAINT: Enforce No Automount Token in 'aegis' namespace
+# ------------------------------------------------------------------------------
 apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sNoAutomountServiceAccountToken
 metadata:
@@ -46,9 +53,9 @@ spec:
       - "aegis"
 
 ---
-# ---------------------------------------------------------
-# CONSTRAINT TEMPLATE: Require ReadOnlyRootFilesystem
-# ---------------------------------------------------------
+# ------------------------------------------------------------------------------
+# 3. CONSTRAINT TEMPLATE: Require ReadOnlyRootFilesystem
+# ------------------------------------------------------------------------------
 apiVersion: templates.gatekeeper.sh/v1
 kind: ConstraintTemplate
 metadata:
@@ -74,9 +81,9 @@ spec:
         }
 
 ---
-# ---------------------------------------------------------
-# CONSTRAINT: Enforce ReadOnlyRootFilesystem in 'aegis' namespace
-# ---------------------------------------------------------
+# ------------------------------------------------------------------------------
+# 4. CONSTRAINT: Enforce ReadOnlyRootFilesystem in 'aegis' namespace
+# ------------------------------------------------------------------------------
 apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sRequireReadOnlyRootFS
 metadata:

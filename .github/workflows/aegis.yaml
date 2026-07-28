@@ -9,9 +9,6 @@ on:
 permissions:
   contents: write
 
-env:
-  REGISTRY: docker.io
-
 jobs:
   security-and-build:
     name: 🔀 Security Scan, Build and Push
@@ -33,13 +30,13 @@ jobs:
       # Checkout
       ############################################################
       - name: ✅ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       ############################################################
       # Secret Scanning
       ############################################################
       - name: 🔎 Secret Scanning
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@v3.96.0
         with:
           base: ""
           head: ${{ github.ref_name }}
@@ -111,12 +108,15 @@ jobs:
       ############################################################
       - name: 🚀 Push Container Image
         run: |
+
           docker push \
           ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:${{ github.sha }}
+
 
           docker tag \
           ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:${{ github.sha }} \
           ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:latest
+
 
           docker push \
           ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:latest

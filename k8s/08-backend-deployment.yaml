@@ -1,13 +1,19 @@
+# ==============================================================================
+# Backend Application Deployment
+# Manages the backend service pod lifecycle, enforcing security contexts,
+# injecting database credentials, and configuring health check probes.
+# ==============================================================================
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
   namespace: aegis
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "1"  # ArgoCD hook: deploys backend after DB (wave 1)
 spec:
-  replicas: 1
-  revisionHistoryLimit: 2
+  replicas: 1  # Runs a single backend pod instance
+  revisionHistoryLimit: 2  # Retains only 2 old ReplicaSets for rollback history
   selector:
     matchLabels:
       app: backend
@@ -16,14 +22,14 @@ spec:
       labels:
         app: backend
     spec:
-      serviceAccountName: backend-sa
+      serviceAccountName: backend-sa # Attaches the backend ServiceAccount
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1000
+        runAsUser: 1000  # Runs container process as non-root UID 1000
       containers:
         - name: backend
-          image: gcrbr/backend:323e3628953497952fbcb3ecd058f6a3e1222fad
+          image: gcrbr/backend:323e3628953497952fbcb3ecd058f6a3e1222fad # Application image tagged with Git commit SHA
           ports:
             - containerPort: 5000
           env:
@@ -33,9 +39,9 @@ spec:
                   name: postgres-secret
                   key: DATABASE_URL
             - name: GUNICORN_CMD_ARGS
-              value: "--worker-tmp-dir /tmp"
+              value: "--worker-tmp-dir /tmp" # Forces Gunicorn temporary files into writable /tmp
             - name: HOME
-              value: /tmp # spostiamo la cartella principale a tmp, dove ha i permessi
+              value: /tmp  # Redirects user home folder to /tmp to allow writing on read-only root FS
           resources:
             requests:
               cpu: "100m"
@@ -51,16 +57,16 @@ spec:
               mountPath: /tmp
           livenessProbe:
             httpGet:
-              path: /api/health
+              path: /api/health  # Endpoint checked to verify if container is alive
               port: 5000
             initialDelaySeconds: 10
-            periodSeconds: 15
+            periodSeconds: 15 # Frequency of health check execution
           readinessProbe:
             httpGet:
-              path: /api/ready
+              path: /api/ready  # Endpoint checked to verify if container can accept traffic
               port: 5000
             initialDelaySeconds: 5
             periodSeconds: 10
       volumes:
         - name: tmp
-          emptyDir: {}
+          emptyDir: {} # Ephemeral volume mounted at /tmp for runtime file creation

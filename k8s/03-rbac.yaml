@@ -1,23 +1,36 @@
+# ==============================================================================
+# RBAC (Role-Based Access Control)
+# Used to restrict permissions of single users inside a namespace
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Creation of a role
+# ------------------------------------------------------------------------------
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: config-reader
   namespace: aegis
 rules:
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get", "list", "watch"]
+  - apiGroups: [""] # The empty string "" indicates core API resources (Pods, ConfigMaps, Secrets, Services)
+    resources: ["configmaps"] # Specifies the object types this role is allowed to access
+    verbs: ["get", "list", "watch"] # Read-only permissions allowed on the specified resources
 ---
+
+# ------------------------------------------------------------------------------
+# 2. Role binding
+# ------------------------------------------------------------------------------
+# The RoleBinding allows to assign the created role to an existing ServiceAccount
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: backend-config-reader-binding
   namespace: aegis
 subjects:
-  - kind: ServiceAccount
+  - kind: ServiceAccount # Must match your ServiceAccount name
     name: backend-sa
     namespace: aegis
 roleRef:
   kind: Role
-  name: config-reader
+  name: config-reader # Must match the Role name above
   apiGroup: rbac.authorization.k8s.io

@@ -1,13 +1,18 @@
+# ==============================================================================
+# PostgreSQL Internal Service
+# Creates a stable internal network endpoint and DNS name ('postgres') 
+# to route traffic inside the cluster to PostgreSQL pods.
+# ==============================================================================
+
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
+  name: postgres  # Internal DNS name for the database
   namespace: aegis
-
 spec:
   selector:
-    app: postgres
-
+    app: postgres # Routes traffic to pods labeled 'app: postgres'
   ports:
-    - port: 5432
-      targetPort: 5432
+    - port: 5432 # Port exposed internally inside the cluster
+      targetPort: 5432 # Actual port the PostgreSQL container listens on
+ 

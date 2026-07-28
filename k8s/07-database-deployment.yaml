@@ -1,13 +1,20 @@
+# ==============================================================================
+# PostgreSQL Deployment
+# Manages the PostgreSQL pod lifecycle with strict security settings,
+# persistent storage mounting, resource limits, and ArgoCD sync ordering.
+# ==============================================================================
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
   namespace: aegis
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-wave: "0" # ArgoCD hook: deploys DB first (wave 0) before backend/frontend
+
 spec:
-  replicas: 1
-  revisionHistoryLimit: 2
+  replicas: 1 # Runs a single database pod instance
+  revisionHistoryLimit: 2 # Retains only 2 old ReplicaSets for rollback history
   selector:
     matchLabels:
       app: postgres
@@ -18,12 +25,12 @@ spec:
         app: postgres
 
     spec:
-      serviceAccountName: postgres-sa
-      automountServiceAccountToken: false
+      serviceAccountName: postgres-sa # Attaches the dedicated ServiceAccount
+      automountServiceAccountToken: false # Disables K8s API token mounting for security
       securityContext:
-        runAsNonRoot: true
-        runAsUser: 999
-        fsGroup: 999
+        runAsNonRoot: true # Blocks execution if process attempts to run as root
+        runAsUser: 999 # Runs as non-root UID 999 ('postgres' user)
+        fsGroup: 999 # Grants GID 999 file access rights to mounted volumes
 
       containers:
         - name: postgres
@@ -34,7 +41,7 @@ spec:
 
           envFrom:
             - secretRef:
-                name: postgres-secret
+                name: postgres-secret # Loads DB credentials from database-secret.yaml
 
           env:
             - name: PGDATA
@@ -49,22 +56,23 @@ spec:
               memory: "512Mi"
 
           securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false # Prevents child processes from gaining more privileges
+            readOnlyRootFilesystem: true # Locks the root filesystem to prevent unauthorized writes
+
 
           volumeMounts:
             - name: pgdata
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/postgresql/data # Mount point for persistent database storage
             - name: tmp
-              mountPath: /tmp
+              mountPath: /tmp # Mount point for temp files (required by read-only root FS)
             - name: run
-              mountPath: /var/run/postgresql
+              mountPath: /var/run/postgresql  # Mount point for runtime sockets (required by read-only root FS)
 
       volumes:
         - name: pgdata
           persistentVolumeClaim:
-            claimName: postgres-pvc
+            claimName: postgres-pvc # Connects to the PersistentVolumeClaim for data retention
         - name: tmp
-          emptyDir: {}
+          emptyDir: {} # Ephemeral in-memory/disk volume for /tmp
         - name: run
-          emptyDir: {}
+          emptyDir: {} # Ephemeral in-memory/disk volume for socket files
