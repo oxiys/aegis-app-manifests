@@ -3,8 +3,11 @@ kind: Deployment
 metadata:
   name: backend
   namespace: aegis
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   replicas: 1
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
       app: backend
