@@ -48,7 +48,7 @@ jobs:
       # Source Code and Dependency Scan
       ############################################################
       - name: 📁 Filesystem Security Scan
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -60,7 +60,7 @@ jobs:
       # Kubernetes Manifest Validation
       ############################################################
       - name: ☸️ Kubernetes Configuration Scan
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: .
@@ -95,7 +95,7 @@ jobs:
       # Container Image Security Scan
       ############################################################
       - name: 🐳 Container Image Security Scan
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:${{ github.sha }}
           format: table
