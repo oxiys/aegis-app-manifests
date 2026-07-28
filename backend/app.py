@@ -5,6 +5,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import psycopg2
 import psycopg2.extras
+import psycopg2.errors
 
 app = Flask(__name__)
 CORS(app)
@@ -18,7 +19,7 @@ def get_db():
 
 
 def init_db(retries=10, delay=3):
-    """Initialize DB with retry logic to handle the race condition
+    """Initialize DB schema with retry logic to handle the race condition
     where the backend pod starts before Postgres is fully ready."""
     for attempt in range(retries):
         try:
@@ -34,12 +35,13 @@ def init_db(retries=10, delay=3):
             conn.commit()
             conn.close()
             logging.info('Database initialized successfully.')
-            return
+            return True
         except Exception as e:
             logging.warning(f'DB init attempt {attempt + 1}/{retries} failed: {e}')
             if attempt < retries - 1:
                 time.sleep(delay)
     logging.error('Could not initialize database after all retries.')
+    return False
 
 
 @app.route('/api/health')
@@ -60,11 +62,19 @@ def ready():
 @app.route('/api/todos', methods=['GET'])
 def get_todos():
     conn = get_db()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute('SELECT * FROM todos ORDER BY id')
-    todos = cur.fetchall()
-    conn.close()
-    return jsonify(todos)
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT * FROM todos ORDER BY id')
+        todos = cur.fetchall()
+        conn.close()
+        return jsonify(todos)
+    except psycopg2.errors.UndefinedTable:
+        # Table doesn't exist yet — DB was not ready at startup.
+        # Create it now and return an empty list on this request.
+        conn.close()
+        logging.warning('Table "todos" not found, initializing DB now...')
+        init_db()
+        return jsonify([])
 
 
 @app.route('/api/todos', methods=['POST'])
@@ -103,8 +113,9 @@ def delete_todo(todo_id):
     return '', 204
 
 
-# Init DB at startup with retry — handles race condition with Postgres pod
-init_db()
+# Best-effort init at startup — Gunicorn master process.
+# If it fails (DB not ready yet), get_todos() handles it lazily.
+init_db(retries=5, delay=2)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
