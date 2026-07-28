@@ -23,7 +23,7 @@ spec:
         runAsUser: 1000
       containers:
         - name: backend
-          image: gcrbr/backend:latest
+          image: gcrbr/backend:323e3628953497952fbcb3ecd058f6a3e1222fad
           ports:
             - containerPort: 5000
           env:
