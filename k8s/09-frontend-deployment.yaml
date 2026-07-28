@@ -34,7 +34,7 @@ spec:
 
       containers:
         - name: frontend
-          image: gcrbr/frontend:323e3628953497952fbcb3ecd058f6a3e1222fad # Application image tagged with Git commit SHA
+          image: gcrbr/frontend:f589e5950f4d46c9a3f230ff1c49ba46fa45ac19
           ports:
             - containerPort: 80
 
