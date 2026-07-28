@@ -36,7 +36,7 @@ spec:
 
         - name: frontend
 
-          image: gcrbr/frontend:7a6be5353dbdcc2f01720142a06e2da07a7e15bd
+          image: gcrbr/frontend:323e3628953497952fbcb3ecd058f6a3e1222fad
 
 
           ports:
