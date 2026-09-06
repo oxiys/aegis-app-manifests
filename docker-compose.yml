@@ -11,7 +11,7 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   backend:
-    build: ./backend
+    build: ../aegis-backend
     environment:
       DATABASE_URL: postgresql://aegis:aegis@db:5432/aegis # trufflehog:ignore
     ports:
@@ -20,7 +20,7 @@ services:
       - db
 
   frontend:
-    build: ./frontend
+    build: ../aegis-frontend
     ports:
       - "3000:80"
     depends_on:

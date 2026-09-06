@@ -1,141 +1,46 @@
-name: 🛡️ Aegis Pipeline
+name: Aegis Manifest Validation
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: aegis-manifests-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  security-and-build:
-    name: 🔀 Security Scan, Build and Push
+  validate:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        service:
-          - name: frontend
-            path: ./frontend
-            manifest: k8s/09-frontend-deployment.yaml
-
-          - name: backend
-            path: ./backend
-            manifest: k8s/08-backend-deployment.yaml
-
     steps:
-      ############################################################
-      # Checkout
-      ############################################################
-      - name: ✅ Checkout repository
+      - name: Checkout manifests
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
-      ############################################################
-      # Secret Scanning
-      ############################################################
-      - name: 🔎 Secret Scanning
+      - name: Secret scanning
         uses: trufflesecurity/trufflehog@v3.96.0
         with:
           base: ""
-          head: ${{ github.ref_name }}
+          head: HEAD
 
-      ############################################################
-      # Source Code and Dependency Scan
-      ############################################################
-      - name: 📁 Filesystem Security Scan
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: table
-          exit-code: "1"
-          severity: HIGH,CRITICAL
+      - name: Test image updates
+        run: python3 -m unittest discover -s tests -v
 
-      ############################################################
-      # Kubernetes Manifest Validation
-      ############################################################
-      - name: ☸️ Kubernetes Configuration Scan
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
+
+      - name: Kubernetes configuration scan
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
-          scan-ref: .
+          scan-ref: k8s/
           format: table
           exit-code: "1"
           severity: HIGH,CRITICAL
-
-      ############################################################
-      # Docker Registry Login
-      ############################################################
-      - name: 📦 Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      ############################################################
-      # Build Image
-      #
-      # The image is built locally.
-      # It is NOT pushed until security checks are completed.
-      ############################################################
-      - name: 🛠️ Build Container Image
-        uses: docker/build-push-action@v7
-        with:
-          context: ${{ matrix.service.path }}
-          load: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:${{ github.sha }}
-
-      ############################################################
-      # Container Image Security Scan
-      ############################################################
-      - name: 🐳 Container Image Security Scan
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:${{ github.sha }}
-          format: table
-          exit-code: "1"
-          ignore-unfixed: true
-          vuln-type: os,library
-          severity: HIGH,CRITICAL
-
-      ############################################################
-      # Push Image
-      #
-      # The image pushed is exactly the image already scanned.
-      ############################################################
-      - name: 🚀 Push Container Image
-        run: |
-
-          docker push \
-          ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:${{ github.sha }}
-
-
-          docker tag \
-          ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:${{ github.sha }} \
-          ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:latest
-
-
-          docker push \
-          ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:latest
-
-      ############################################################
-      # Update K8s manifest with the exact SHA tag
-      ############################################################
-      - name: 📝 Update image tag in manifest
-        run: |
-          sed -i "s|${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:.*|${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.name }}:${{ github.sha }}|g" \
-            ${{ matrix.service.manifest }}
-
-      - name: 💾 Commit updated manifest
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ${{ matrix.service.manifest }}
-          if ! git diff --cached --quiet; then
-            git commit -m "ci: update ${{ matrix.service.name }} image to ${{ github.sha }} [skip ci]"
-            git pull --rebase origin main
-            git push
-          fi
