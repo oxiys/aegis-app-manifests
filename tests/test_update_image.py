@@ -20,7 +20,7 @@ class UpdateImageTests(unittest.TestCase):
         for service, filename in MANIFESTS.items():
             with self.subTest(service=service):
                 before = self.snapshot()
-                image = f'gcrbr/{service}:' + 'a' * 40
+                image = f'oxiys/{service}:' + 'a' * 40
                 self.assertTrue(update_image(self.root, service, image))
                 after = self.snapshot()
                 self.assertEqual([name for name in before if before[name] != after[name]], [filename])
@@ -36,11 +36,11 @@ class UpdateImageTests(unittest.TestCase):
     def test_invalid_input_never_changes_files(self):
         before = self.snapshot()
         for service, image in [
-            ('database', 'gcrbr/backend:' + 'a' * 40),
-            ('backend', 'gcrbr/frontend:' + 'a' * 40),
-            ('backend', 'gcrbr/backend:latest'),
-            ('backend', 'gcrbr/backend:' + 'a' * 39),
-            ('backend', 'gcrbr/backend:' + 'a' * 40 + '\n'),
+            ('database', 'oxiys/backend:' + 'a' * 40),
+            ('backend', 'oxiys/frontend:' + 'a' * 40),
+            ('backend', 'oxiys/backend:latest'),
+            ('backend', 'oxiys/backend:' + 'a' * 39),
+            ('backend', 'oxiys/backend:' + 'a' * 40 + '\n'),
             ('backend', 'attacker/backend:' + 'a' * 40),
         ]:
             with self.subTest(service=service, image=image):
@@ -54,7 +54,7 @@ class UpdateImageTests(unittest.TestCase):
         content = content.replace('\n          ports:', ' # deployed image\n          ports:', 1)
         content += '\n        - name: sidecar\n          image: example/sidecar:stable\n'
         path.write_text(content)
-        image = 'gcrbr/backend:' + 'b' * 40
+        image = 'oxiys/backend:' + 'b' * 40
         update_image(self.root, 'backend', image)
         self.assertIn(f'image: {image} # deployed image\n', path.read_text())
         self.assertIn('image: example/sidecar:stable\n', path.read_text())
@@ -65,7 +65,7 @@ class UpdateImageTests(unittest.TestCase):
         for content in [original + '\n' + original, original.replace('- name: backend', '- name: renamed')]:
             path.write_text(content)
             with self.assertRaises(ValueError):
-                update_image(self.root, 'backend', 'gcrbr/backend:' + 'c' * 40)
+                update_image(self.root, 'backend', 'oxiys/backend:' + 'c' * 40)
             self.assertEqual(path.read_text(), content)
 
 

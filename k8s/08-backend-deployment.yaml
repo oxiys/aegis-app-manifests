@@ -29,7 +29,7 @@ spec:
         runAsUser: 1000  # Runs container process as non-root UID 1000
       containers:
         - name: backend
-          image: gcrbr/backend:f589e5950f4d46c9a3f230ff1c49ba46fa45ac19
+          image: oxiys/backend:f589e5950f4d46c9a3f230ff1c49ba46fa45ac19
           ports:
             - containerPort: 5000
           env:

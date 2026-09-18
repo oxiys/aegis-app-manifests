@@ -1,13 +1,13 @@
 # aegis-app-manifests
 
 Deployment configuration for the mock application used by the
-[Aegis DevSecOps Pipeline](https://github.com/gcrbr/aegis-pipeline).
+[Aegis DevSecOps Pipeline](https://github.com/oxiys/aegis-pipeline).
 
 | Repository | Responsibility |
 | --- | --- |
-| [aegis-app-manifests](https://github.com/gcrbr/aegis-app-manifests) | Kubernetes manifests, PostgreSQL deployment, RBAC, Cilium/OPA policies and Compose orchestration |
-| [aegis-backend](https://github.com/gcrbr/aegis-backend) | Flask API, Dockerfile, dependencies and backend image CI |
-| [aegis-frontend](https://github.com/gcrbr/aegis-frontend) | HTML/JavaScript UI, Nginx configuration, Dockerfile and frontend image CI |
+| [aegis-app-manifests](https://github.com/oxiys/aegis-app-manifests) | Kubernetes manifests, PostgreSQL deployment, RBAC, Cilium/OPA policies and Compose orchestration |
+| [aegis-backend](https://github.com/oxiys/aegis-backend) | Flask API, Dockerfile, dependencies and backend image CI |
+| [aegis-frontend](https://github.com/oxiys/aegis-frontend) | HTML/JavaScript UI, Nginx configuration, Dockerfile and frontend image CI |
 
 ## Kubernetes and GitOps
 
@@ -33,9 +33,9 @@ The database secret contains the existing mock application's example credentials
 Clone all three repositories into the same parent directory:
 
 ```bash
-git clone https://github.com/gcrbr/aegis-app-manifests.git
-git clone https://github.com/gcrbr/aegis-backend.git
-git clone https://github.com/gcrbr/aegis-frontend.git
+git clone https://github.com/oxiys/aegis-app-manifests.git
+git clone https://github.com/oxiys/aegis-backend.git
+git clone https://github.com/oxiys/aegis-frontend.git
 cd aegis-app-manifests
 docker compose up --build
 ```
@@ -57,8 +57,8 @@ existing Docker Hub image name, and commits its SHA tag to this repository:
 
 | Producer | Image | Manifest |
 | --- | --- | --- |
-| `gcrbr/aegis-backend` | `gcrbr/backend:<commit-sha>` | `k8s/08-backend-deployment.yaml` |
-| `gcrbr/aegis-frontend` | `gcrbr/frontend:<commit-sha>` | `k8s/09-frontend-deployment.yaml` |
+| `oxiys/aegis-backend` | `oxiys/backend:<commit-sha>` | `k8s/08-backend-deployment.yaml` |
+| `oxiys/aegis-frontend` | `oxiys/frontend:<commit-sha>` | `k8s/09-frontend-deployment.yaml` |
 
 The application workflows use a `GITOPS_TOKEN` with Contents read/write on this
 repository. The token identity must be allowed to push to `main`, matching the
@@ -74,7 +74,7 @@ commit SHA after its first successful release.
 To update a manifest explicitly:
 
 ```bash
-python3 scripts/update_image.py backend gcrbr/backend:<40-character-commit-sha>
+python3 scripts/update_image.py backend oxiys/backend:<40-character-commit-sha>
 python3 -m unittest discover -s tests -v
 ```
 

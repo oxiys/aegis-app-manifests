@@ -14,9 +14,9 @@ MANIFESTS = {
 def update_image(root: Path, service: str, image: str) -> bool:
     if service not in MANIFESTS:
         raise ValueError(f'Unknown service: {service}')
-    expected = rf'gcrbr/{service}:[0-9a-f]{{40}}'
+    expected = rf'oxiys/{service}:[0-9a-f]{{40}}'
     if not re.fullmatch(expected, image):
-        raise ValueError(f'Expected gcrbr/{service}:<40-character lowercase commit SHA>')
+        raise ValueError(f'Expected oxiys/{service}:<40-character lowercase commit SHA>')
 
     path = root / 'k8s' / MANIFESTS[service]
     original = path.read_text(encoding='utf-8')
