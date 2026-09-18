@@ -29,6 +29,7 @@ jobs:
         with:
           base: ""
           head: HEAD
+          extra_args: --only-verified
 
       - name: Test image updates
         run: python3 -m unittest discover -s tests -v
