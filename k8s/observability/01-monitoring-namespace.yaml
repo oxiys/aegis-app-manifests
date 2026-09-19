@@ -1,0 +1,10 @@
+# ==============================================================================
+# Namespace for Observability & Monitoring Stack (Prometheus + Grafana)
+# ==============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    name: monitoring

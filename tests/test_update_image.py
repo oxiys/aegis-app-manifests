@@ -14,7 +14,7 @@ class UpdateImageTests(unittest.TestCase):
         shutil.copytree(Path(__file__).resolve().parents[1] / 'k8s', self.root / 'k8s')
 
     def snapshot(self):
-        return {p.name: p.read_bytes() for p in (self.root / 'k8s').iterdir()}
+        return {p.name: p.read_bytes() for p in (self.root / 'k8s').iterdir() if p.is_file()}
 
     def test_each_service_changes_only_its_image_and_is_idempotent(self):
         for service, filename in MANIFESTS.items():

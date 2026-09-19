@@ -1,0 +1,32 @@
+# ==============================================================================
+# Argo CD Application Manifest for Aegis GitOps
+#
+# Connects Argo CD to the GitOps repository to continuously reconcile:
+# - Wave 0: PostgreSQL StatefulSet
+# - Wave 1: Flask Backend API & OPA ConstraintTemplates
+# - Wave 2: Nginx Frontend UI & OPA Constraints
+# ==============================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aegis
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/oxiys/aegis-app-manifests.git
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: aegis
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true

@@ -1,0 +1,37 @@
+# ==============================================================================
+# Kind Cluster Configuration for Aegis DevSecOps & Observability Control Plane
+#
+# Configures a single-node Kind cluster with:
+# - Default CNI disabled (ready for Cilium eBPF CNI installation)
+# - Host port mappings for seamless access to:
+#     - Grafana Unified Dashboard: http://localhost:3000  (NodePort 32000)
+#     - Aegis Frontend UI:        http://localhost:8080  (NodePort 30080)
+#     - Prometheus Server:        http://localhost:9090  (NodePort 32090)
+#     - Argo CD Web UI:           http://localhost:8081  (NodePort 32080)
+# ==============================================================================
+
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      # Grafana Dashboard
+      - containerPort: 32000
+        hostPort: 3000
+        protocol: TCP
+      # Aegis Frontend Web App
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP
+      # Prometheus Server
+      - containerPort: 32090
+        hostPort: 9090
+        protocol: TCP
+      # Argo CD Web UI
+      - containerPort: 32080
+        hostPort: 8081
+        protocol: TCP
+
+networking:
+  disableDefaultCNI: true # Disables Kindnet to allow Cilium eBPF installation
+  podSubnet: "10.244.0.0/16"

@@ -97,6 +97,6 @@ spec:
             - port: "5432"
               protocol: TCP
   egress:
-    # Postgres doesn't need to initiate any outbound connections.
-    # By omitting egress rules entirely, it will default-deny any outbound traffic.
-    []
+    # Zero-Trust: Postgres must never initiate outbound connections (prevents C2 & exfiltration)
+    - toEntities:
+        - none

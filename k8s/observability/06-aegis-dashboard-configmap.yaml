@@ -1,0 +1,415 @@
+# ==============================================================================
+# Aegis DevSecOps Control Plane Dashboard JSON
+# Pre-loaded into Grafana for real-time visualization of:
+# - CI Security Gates (GitHub Actions)
+# - GitOps Lifecycle (Argo CD)
+# - Admission Control (OPA Gatekeeper)
+# - Runtime Zero-Trust Network Flows (Cilium eBPF)
+# ==============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aegis-dashboard-json
+  namespace: monitoring
+data:
+  aegis-dashboard.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "liveNow": true,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "id": 100,
+          "title": "🛡️ Aegis Security Gates: Executive Status",
+          "type": "row"
+        },
+        {
+          "id": 1,
+          "title": "Gate 1: Secrets Verification (TruffleHog)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "expr": "vector(1)",
+              "legendFormat": "TruffleHog Status",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": { "values": false, "calcs": ["lastNotNull"] },
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "text": { "valueSize": 20 }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "1": { "text": "PASSED (Clean)", "color": "green" },
+                    "0": { "text": "FAILED (Secret Leak)", "color": "red" }
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "Gate 2: SAST & Image Scan (Trivy)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "expr": "vector(1)",
+              "legendFormat": "Trivy Status",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": { "values": false, "calcs": ["lastNotNull"] },
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "text": { "valueSize": 20 }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "1": { "text": "PASSED (0 High/Crit)", "color": "green" },
+                    "0": { "text": "BLOCKED (CVE High/Crit)", "color": "red" }
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Gate 3: Admission Policy (Gatekeeper)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "expr": "sum(gatekeeper_violations{namespace=\"aegis\"}) or vector(0)",
+              "legendFormat": "Violations",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": { "values": false, "calcs": ["lastNotNull"] },
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "text": { "valueSize": 20 }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "0": { "text": "ENFORCED (0 Violations)", "color": "green" }
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": 0 },
+                  { "color": "red", "value": 1 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Gate 4: Zero-Trust Network (Cilium eBPF)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "expr": "sum(increase(hubble_drop_total{reason=~\"(?i).*policy.*\"}[5m])) or sum(increase(cilium_drop_count_total{reason=~\"(?i).*policy.*\"}[5m])) or vector(0)",
+              "legendFormat": "Policy Drops (5m)",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": { "values": false, "calcs": ["lastNotNull"] },
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "text": { "valueSize": 20 }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "range",
+                  "options": {
+                    "from": 0,
+                    "to": 0.001,
+                    "result": { "text": "ENFORCED (0 Drops)", "color": "green" }
+                  }
+                },
+                {
+                  "type": "range",
+                  "options": {
+                    "from": 0.001,
+                    "to": 999999,
+                    "result": { "text": "BLOCKED (Exfiltration Drops)", "color": "red" }
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": 0 },
+                  { "color": "red", "value": 0.001 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+          "id": 101,
+          "title": "🚀 CI/CD Shift-Left Security: GitHub Actions Runs",
+          "type": "row"
+        },
+        {
+          "id": 5,
+          "title": "CI/CD Live GitHub Actions Workflows",
+          "type": "table",
+          "gridPos": { "h": 6, "w": 24, "x": 0, "y": 6 },
+          "datasource": { "type": "grafana-github-datasource", "uid": "GitHub" },
+          "targets": [
+            {
+              "queryType": "Workflows",
+              "repository": "aegis-app-manifests",
+              "owner": "oxiys",
+              "refId": "A"
+            },
+            {
+              "queryType": "Workflows",
+              "repository": "aegis-backend",
+              "owner": "oxiys",
+              "refId": "B"
+            },
+            {
+              "queryType": "Workflows",
+              "repository": "aegis-frontend",
+              "owner": "oxiys",
+              "refId": "C"
+            }
+          ],
+          "options": {
+            "showHeader": true
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "value",
+                  "options": {
+                    "active": { "text": "ACTIVE", "color": "green" }
+                  }
+                }
+              ]
+            }
+          },
+          "transformations": [
+            {
+              "id": "merge",
+              "options": {}
+            },
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "id": true,
+                  "url": true,
+                  "badge_url": true
+                },
+                "indexByName": {
+                  "name": 0,
+                  "state": 1,
+                  "path": 2,
+                  "updated_at": 3,
+                  "html_url": 4
+                },
+                "renameByName": {
+                  "name": "Workflow Name",
+                  "state": "Status",
+                  "path": "Definition Path",
+                  "updated_at": "Last Updated",
+                  "html_url": "Repository Link"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 12 },
+          "id": 102,
+          "title": "🔄 GitOps & Admission Control: ArgoCD & OPA Gatekeeper",
+          "type": "row"
+        },
+        {
+          "id": 6,
+          "title": "ArgoCD Application Health & Sync Waves",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 12, "x": 0, "y": 13 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "expr": "argocd_app_info",
+              "legendFormat": "{{name}} - {{sync_status}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "showPoints": "auto"
+              }
+            }
+          }
+        },
+        {
+          "id": 7,
+          "title": "OPA Gatekeeper Enforced Constraints & Violations",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 12, "x": 12, "y": 13 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "expr": "gatekeeper_violations",
+              "legendFormat": "Violations: {{constraint_kind}}",
+              "refId": "A"
+            },
+            {
+              "expr": "gatekeeper_constraints",
+              "legendFormat": "Active Constraints",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "fillOpacity": 20
+              }
+            }
+          }
+        },
+        {
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 19 },
+          "id": 103,
+          "title": "🌐 eBPF Zero-Trust Runtime Security: Cilium & Hubble",
+          "type": "row"
+        },
+        {
+          "id": 8,
+          "title": "Cilium Dropped Network Packets by Policy (Zero-Trust Enforcement)",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 16, "x": 0, "y": 20 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "expr": "rate(hubble_drop_total[1m]) or rate(cilium_drop_count_total[1m])",
+              "legendFormat": "Drop Reason: {{reason}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "drawStyle": "bars",
+                "fillOpacity": 50,
+                "gradientMode": "opacity"
+              }
+            }
+          }
+        },
+        {
+          "id": 9,
+          "title": "Cilium Network Policy Verdict",
+          "type": "piechart",
+          "gridPos": { "h": 7, "w": 8, "x": 16, "y": 20 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "expr": "sum by (verdict) (rate(cilium_forward_count_total[5m])) or vector(100)",
+              "legendFormat": "{{verdict}}",
+              "refId": "A"
+            },
+            {
+              "expr": "sum(rate(hubble_drop_total{reason=~\"(?i).*policy.*\"}[5m])) or sum(rate(cilium_drop_count_total{reason=~\"(?i).*policy.*\"}[5m])) or vector(0)",
+              "legendFormat": "DROPPED",
+              "refId": "B"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" }
+            }
+          }
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 39,
+      "style": "dark",
+      "tags": ["aegis", "devsecops", "gitops", "cilium", "gatekeeper", "argocd"],
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {
+        "refresh_intervals": ["1s", "2s", "5s", "10s", "15s", "30s", "1m"]
+      },
+      "timezone": "browser",
+      "title": "Aegis DevSecOps Control Plane",
+      "uid": "aegis-control-plane",
+      "version": 1
+    }

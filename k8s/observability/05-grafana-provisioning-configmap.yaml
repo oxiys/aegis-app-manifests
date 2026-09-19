@@ -1,0 +1,56 @@
+# ==============================================================================
+# Grafana Provisioning: DataSources and Dashboard Providers
+#
+# Automatically configures:
+# 1. Prometheus datasource pointing to in-cluster Prometheus
+# 2. GitHub datasource with polling interval 15s (respecting rate limits)
+# 3. Dashboard provider loading the Aegis DevSecOps Control Plane automatically
+# ==============================================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus.monitoring.svc.cluster.local:9090
+        isDefault: true
+        editable: true
+        jsonData:
+          timeInterval: 10s
+
+      - name: GitHub
+        type: grafana-github-datasource
+        access: proxy
+        isDefault: false
+        editable: true
+        jsonData:
+          owner: oxiys
+        secureJsonData:
+          accessToken: "$__env{GITHUB_TOKEN}"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-provider
+  namespace: monitoring
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: "Aegis DevSecOps"
+        orgId: 1
+        folder: "Aegis Security"
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 10
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards

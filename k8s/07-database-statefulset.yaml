@@ -1,11 +1,12 @@
 # ==============================================================================
-# PostgreSQL Deployment
-# Manages the PostgreSQL pod lifecycle with strict security settings,
-# persistent storage mounting, resource limits, and ArgoCD sync ordering.
+# PostgreSQL StatefulSet
+# Manages PostgreSQL as a StatefulSet to guarantee persistent storage integrity,
+# stable network identity, and clean volume locking during restarts and upgrades.
+# Configured with ArgoCD sync-wave 0 to deploy before backend and frontend.
 # ==============================================================================
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: postgres
   namespace: aegis
@@ -13,8 +14,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "0" # ArgoCD hook: deploys DB first (wave 0) before backend/frontend
 
 spec:
-  replicas: 1 # Runs a single database pod instance
-  revisionHistoryLimit: 2 # Retains only 2 old ReplicaSets for rollback history
+  serviceName: postgres # Headless/governing service for the StatefulSet
+  replicas: 1 # Single stateful database instance
+  revisionHistoryLimit: 2 # Retains only 2 old revisions
   selector:
     matchLabels:
       app: postgres
@@ -25,7 +27,7 @@ spec:
         app: postgres
 
     spec:
-      serviceAccountName: postgres-sa # Attaches the dedicated ServiceAccount
+      serviceAccountName: postgres-sa # Attaches dedicated ServiceAccount
       automountServiceAccountToken: false # Disables K8s API token mounting for security
       securityContext:
         runAsNonRoot: true # Blocks execution if process attempts to run as root
@@ -38,6 +40,7 @@ spec:
 
           ports:
             - containerPort: 5432
+              name: postgres
 
           envFrom:
             - secretRef:
@@ -56,9 +59,8 @@ spec:
               memory: "512Mi"
 
           securityContext:
-            allowPrivilegeEscalation: false # Prevents child processes from gaining more privileges
+            allowPrivilegeEscalation: false # Prevents gaining child privileges
             readOnlyRootFilesystem: true # Locks the root filesystem to prevent unauthorized writes
-
 
           volumeMounts:
             - name: pgdata
@@ -66,12 +68,12 @@ spec:
             - name: tmp
               mountPath: /tmp # Mount point for temp files (required by read-only root FS)
             - name: run
-              mountPath: /var/run/postgresql  # Mount point for runtime sockets (required by read-only root FS)
+              mountPath: /var/run/postgresql # Mount point for runtime sockets (required by read-only root FS)
 
       volumes:
         - name: pgdata
           persistentVolumeClaim:
-            claimName: postgres-pvc # Connects to the PersistentVolumeClaim for data retention
+            claimName: postgres-pvc # Connects to PersistentVolumeClaim (06-pvc.yaml)
         - name: tmp
           emptyDir: {} # Ephemeral in-memory/disk volume for /tmp
         - name: run
