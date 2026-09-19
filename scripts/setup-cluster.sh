@@ -44,6 +44,14 @@ helm upgrade --install cilium cilium/cilium \
 echo "Waiting for Cilium daemonset to become ready..."
 kubectl -n kube-system rollout status ds/cilium --timeout=120s
 
+# Install Cilium Tetragon (eBPF Kernel Runtime Security & Sigkill)
+echo "Installing Cilium Tetragon for Kernel Runtime Security..."
+helm upgrade --install tetragon cilium/tetragon \
+  --namespace kube-system \
+  --set tetragon.prometheus.enabled=true \
+  --set tetragon.prometheus.port=2112
+kubectl -n kube-system rollout status ds/tetragon --timeout=120s
+
 # Install OPA Gatekeeper with audit metrics
 echo "Installing OPA Gatekeeper with Audit metrics enabled..."
 helm upgrade --install gatekeeper gatekeeper/gatekeeper \

@@ -34,9 +34,9 @@ data:
         },
         {
           "id": 1,
-          "title": "Gate 1: Secrets Verification (TruffleHog)",
+          "title": "Gate 1: Secrets (TruffleHog)",
           "type": "stat",
-          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
           "targets": [
             {
@@ -50,7 +50,7 @@ data:
             "colorMode": "background",
             "graphMode": "none",
             "justifyMode": "center",
-            "text": { "valueSize": 20 }
+            "text": { "valueSize": 18 }
           },
           "fieldConfig": {
             "defaults": {
@@ -77,7 +77,7 @@ data:
           "id": 2,
           "title": "Gate 2: SAST & Image Scan (Trivy)",
           "type": "stat",
-          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+          "gridPos": { "h": 4, "w": 5, "x": 4, "y": 1 },
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
           "targets": [
             {
@@ -91,7 +91,7 @@ data:
             "colorMode": "background",
             "graphMode": "none",
             "justifyMode": "center",
-            "text": { "valueSize": 20 }
+            "text": { "valueSize": 18 }
           },
           "fieldConfig": {
             "defaults": {
@@ -116,9 +116,9 @@ data:
         },
         {
           "id": 3,
-          "title": "Gate 3: Admission Policy (Gatekeeper)",
+          "title": "Gate 3: Admission (Gatekeeper)",
           "type": "stat",
-          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+          "gridPos": { "h": 4, "w": 5, "x": 9, "y": 1 },
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
           "targets": [
             {
@@ -132,7 +132,7 @@ data:
             "colorMode": "background",
             "graphMode": "none",
             "justifyMode": "center",
-            "text": { "valueSize": 20 }
+            "text": { "valueSize": 18 }
           },
           "fieldConfig": {
             "defaults": {
@@ -166,9 +166,9 @@ data:
         },
         {
           "id": 4,
-          "title": "Gate 4: Zero-Trust Network (Cilium eBPF)",
+          "title": "Gate 4: Network Zero-Trust (Cilium)",
           "type": "stat",
-          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+          "gridPos": { "h": 4, "w": 5, "x": 14, "y": 1 },
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
           "targets": [
             {
@@ -182,7 +182,7 @@ data:
             "colorMode": "background",
             "graphMode": "none",
             "justifyMode": "center",
-            "text": { "valueSize": 20 }
+            "text": { "valueSize": 18 }
           },
           "fieldConfig": {
             "defaults": {
@@ -201,6 +201,56 @@ data:
                     "from": 0.001,
                     "to": 999999,
                     "result": { "text": "BLOCKED (Exfiltration Drops)", "color": "red" }
+                  }
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": 0 },
+                  { "color": "red", "value": 0.001 }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": 10,
+          "title": "Gate 5: Kernel Security (Tetragon)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 5, "x": 19, "y": 1 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "expr": "sum(increase(tetragon_policy_events_total{policy=\"block-credential-theft\"}[5m])) or vector(0)",
+              "legendFormat": "Kernel Sigkills (5m)",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": { "values": false, "calcs": ["lastNotNull"] },
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "text": { "valueSize": 18 }
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "type": "range",
+                  "options": {
+                    "from": 0,
+                    "to": 0.001,
+                    "result": { "text": "ENFORCED (0 Kills)", "color": "green" }
+                  }
+                },
+                {
+                  "type": "range",
+                  "options": {
+                    "from": 0.001,
+                    "to": 999999,
+                    "result": { "text": "TERMINATED (Sigkill)", "color": "red" }
                   }
                 }
               ],
@@ -355,14 +405,14 @@ data:
           "collapsed": false,
           "gridPos": { "h": 1, "w": 24, "x": 0, "y": 19 },
           "id": 103,
-          "title": "🌐 eBPF Zero-Trust Runtime Security: Cilium & Hubble",
+          "title": "🌐 eBPF Zero-Trust Runtime & Kernel Security: Cilium, Hubble & Tetragon",
           "type": "row"
         },
         {
           "id": 8,
-          "title": "Cilium Dropped Network Packets by Policy (Zero-Trust Enforcement)",
+          "title": "Cilium Dropped Packets by Policy",
           "type": "timeseries",
-          "gridPos": { "h": 7, "w": 16, "x": 0, "y": 20 },
+          "gridPos": { "h": 7, "w": 9, "x": 0, "y": 20 },
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
           "targets": [
             {
@@ -383,10 +433,34 @@ data:
           }
         },
         {
+          "id": 11,
+          "title": "Tetragon Kernel Enforcement & Syscall Alerts",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 9, "x": 9, "y": 20 },
+          "datasource": { "type": "prometheus", "uid": "Prometheus" },
+          "targets": [
+            {
+              "expr": "sum by (policy) (rate(tetragon_policy_events_total[1m]))",
+              "legendFormat": "{{policy}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "color": { "mode": "palette-classic" },
+              "custom": {
+                "drawStyle": "bars",
+                "fillOpacity": 60,
+                "gradientMode": "opacity"
+              }
+            }
+          }
+        },
+        {
           "id": 9,
-          "title": "Cilium Network Policy Verdict",
+          "title": "Cilium Policy Verdict",
           "type": "piechart",
-          "gridPos": { "h": 7, "w": 8, "x": 16, "y": 20 },
+          "gridPos": { "h": 7, "w": 6, "x": 18, "y": 20 },
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
           "targets": [
             {
