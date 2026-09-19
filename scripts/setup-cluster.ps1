@@ -55,6 +55,7 @@ Write-Host "Configuring Helm repositories..." -ForegroundColor Green
 helm repo add cilium https://helm.cilium.io/ 2>$null
 helm repo add gatekeeper https://open-policy-agent.github.io/gatekeeper/charts 2>$null
 helm repo add argo https://argoproj.github.io/argo-helm 2>$null
+helm repo add kyverno https://kyverno.github.io/kyverno/ 2>$null
 helm repo update
 
 # 4. Install Cilium with eBPF and Hubble drop metrics
@@ -85,6 +86,13 @@ helm upgrade --install gatekeeper gatekeeper/gatekeeper `
     --create-namespace `
     --set audit.metrics.enabled=true `
     --set controllerManager.metrics.enabled=true
+
+# 5b. Install Kyverno for Supply Chain & Signature Verification
+Write-Host "Installing Kyverno Admission Controller..." -ForegroundColor Green
+helm upgrade --install kyverno kyverno/kyverno `
+    --namespace kyverno `
+    --create-namespace
+kubectl -n kyverno rollout status deployment/kyverno-admission-controller --timeout=120s
 
 # 6. Install Argo CD
 Write-Host "Installing Argo CD..." -ForegroundColor Green
