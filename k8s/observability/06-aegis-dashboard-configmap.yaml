@@ -122,8 +122,8 @@ data:
           "datasource": { "type": "prometheus", "uid": "Prometheus" },
           "targets": [
             {
-              "expr": "sum(gatekeeper_violations) or sum(increase(gatekeeper_validation_request_count_total{admission_status=\"deny\"}[5m])) or vector(0)",
-              "legendFormat": "Violations",
+              "expr": "sum(gatekeeper_validation_request_count_total{admission_status=\"deny\"}) or sum(gatekeeper_violations) or vector(0)",
+              "legendFormat": "Violations & Denials",
               "refId": "A"
             }
           ],
