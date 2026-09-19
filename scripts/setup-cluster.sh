@@ -29,6 +29,7 @@ fi
 echo "Configuring Helm repositories..."
 helm repo add cilium https://helm.cilium.io/ 2>/dev/null || true
 helm repo add gatekeeper https://open-policy-agent.github.io/gatekeeper/charts 2>/dev/null || true
+helm repo add kyverno https://kyverno.github.io/kyverno/ 2>/dev/null || true
 helm repo add argo https://argoproj.github.io/argo-helm 2>/dev/null || true
 helm repo update
 
@@ -59,6 +60,13 @@ helm upgrade --install gatekeeper gatekeeper/gatekeeper \
   --create-namespace \
   --set audit.metrics.enabled=true \
   --set controllerManager.metrics.enabled=true
+
+# Install Kyverno for Supply Chain & Signature Verification
+echo "Installing Kyverno Admission Controller..."
+helm upgrade --install kyverno kyverno/kyverno \
+  --namespace kyverno \
+  --create-namespace
+kubectl -n kyverno rollout status deployment/kyverno-admission-controller --timeout=120s
 
 # Install Argo CD
 echo "Installing Argo CD..."
